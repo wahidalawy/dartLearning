@@ -3,6 +3,8 @@ import 'dart:io';
 
 List<Map<String, dynamic>> library = [];
 
+String bookDBAddress = 'books.json';
+
 void main(List<String> args) {
   // initialize library books
   initLibrary();
@@ -21,14 +23,14 @@ void main(List<String> args) {
 }
 
 void initLibrary() {
-  if (File('books.json').existsSync()) {
-    String booksContent = File('books.json').readAsStringSync();
+  if (File(bookDBAddress).existsSync()) {
+    String booksContent = File(bookDBAddress).readAsStringSync();
     if (booksContent.isNotEmpty) {
       List<dynamic> books = jsonDecode(booksContent);
       library.addAll(books.cast());
     }
   } else {
-    File('books.json').createSync();
+    File(bookDBAddress).createSync();
   }
 }
 
@@ -51,7 +53,7 @@ void handleUserRequest(String input) {
       addBookRequest();
       break;
     case '3':
-      editBook();
+      editBookRequest();
       break;
     case '4':
       deleteBook();
@@ -66,7 +68,7 @@ void handleUserRequest(String input) {
 
 void showAllBooks() {
   print(
-    library.map((item) => getBookPritable(item)).toList().join('\n----------------------\n'),
+    library.map((item) => getBookPrintable(item)).toList().join('\n----------------------\n'),
   );
 }
 
@@ -88,7 +90,7 @@ void addBookRequest() {
         continue;
       }
       print('Book created Succesfuly:');
-      print(getBookPritable(addBook(title, author)));
+      print(getBookPrintable(addBook(title, author)));
       print('------------------------------------');
       break;
     }
@@ -109,18 +111,91 @@ Map<String, dynamic> addBook(String title, String author) {
 bool syncLibraryWithDB() {
   try {
     String booksJson = jsonEncode(library);
-    File('./books.json').writeAsStringSync(booksJson);
+    File(bookDBAddress).writeAsStringSync(booksJson);
     return true;
   } catch (ex) {
     return false;
   }
 }
 
-void editBook() {}
+void editBookRequest() {
+  print('Enter BookID wants to Edit: (Enter 0 for back)');
+  String input = stdin.readLineSync()!;
+  while (input != '0') {
+    if (input.isEmpty) {
+      print('Nothig Entered!!\nPlease try again:');
+      input = stdin.readLineSync()!;
+      continue;
+    }
+    int? id = int.tryParse(input);
+    if (id == null) {
+      print('Input is not in currect format!!\nPlease try again:');
+      input = stdin.readLineSync()!;
+      continue;
+    }
+    //if this inputed id not found!!
+    if (!library.any((item) => item['id'] == id)) {
+      print('Inputed ID not found!\nPlease try again:');
+      input = stdin.readLineSync()!;
+      continue;
+    }
+    Map<String, dynamic> book = library.firstWhere((item) => item['id'] == id);
+    print('Book found Succesfuly:');
+    print(getBookPrintable(book));
+    print('------------------------------------');
+    print('Enter the Select:\n1: Edit Book Title\n2: Edit Book Author');
+    input = stdin.readLineSync()!;
+    while (input != '0') {
+      switch (input) {
+        case '1':
+          var result = editBook(id, EditMode.title);
+          if (result != null) {
+            print('Book Title edited Succesfuly:');
+            print(getBookPrintable(result));
+            print('------------------------------------');
+          }
+          break;
+        case '2':
+          var result = editBook(id, EditMode.author);
+          if (result != null) {
+            print('Book Author edited Succesfuly:');
+            print(getBookPrintable(result));
+            print('------------------------------------');
+          }
+          break;
+        default:
+          print('input was not currect!!\nplease try again...');
+      }
+      break;
+    }
+    break;
+  }
+}
+
+enum EditMode { title, author }
+
+Map<String, dynamic>? editBook(int bookID, EditMode mode) {
+  int bookIndex = library.indexWhere((item) => item['id'] == bookID);
+  bool isEdited = false;
+  print('Enter new ${mode.name}:');
+  String input = stdin.readLineSync()!;
+  while (input != '0') {
+    if (input.isEmpty) {
+      print('Nothing Entered!\nPlease try again...');
+      input = stdin.readLineSync()!;
+      continue;
+    }
+    library[bookIndex][mode.name] = input;
+    if (syncLibraryWithDB()) {
+      print('Data Stored!');
+    }
+    isEdited = true;
+    break;
+  }
+  return isEdited ? library[bookIndex] : null;
+}
+
 void deleteBook() {}
 void searchBooks() {}
 
-String getBookPritable(Map<String, dynamic> book) {
-  String output = "id: ${book['id']}\ttitle: ${book['title']}\tauthor: ${book['author']}";
-  return output;
-}
+String getBookPrintable(Map<String, dynamic> book) => "id: ${book['id']}\ttitle: ${book['title']}\tauthor: ${book['author']}";
