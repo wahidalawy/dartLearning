@@ -1,0 +1,1 @@
+typedef Book = Map<String, dynamic>;
