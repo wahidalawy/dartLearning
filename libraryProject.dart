@@ -59,7 +59,7 @@ void handleUserRequest(String input) {
       deleteBookRequest();
       break;
     case '5':
-      searchBooks();
+      searchBooksRequest();
       break;
     default:
       print('input was not currect!!\nplease try again...');
@@ -121,10 +121,7 @@ bool syncLibraryWithDB() {
 void editBookRequest() {
   int? id = getBookId();
   if (id != null) {
-    Map<String, dynamic> book = library.firstWhere((item) => item['id'] == id);
-    print('Book found Succesfuly:');
-    print(getBookPrintable(book));
-    print('------------------------------------');
+    printBookByID(id);
     print('Enter the Select:\n1: Edit Book Title\n2: Edit Book Author');
     String input = stdin.readLineSync()!;
     while (input != '0') {
@@ -179,6 +176,7 @@ Map<String, dynamic>? editBook(int bookID, EditMode mode) {
 void deleteBookRequest() {
   int? id = getBookId();
   if (id != null) {
+    printBookByID(id);
     print('Do you realy want to delete the Book?(y: yes, n: no)');
     String input = stdin.readLineSync()!;
     if (input == 'y') {
@@ -195,6 +193,13 @@ void deleteBook(int bookID) {
   if (syncLibraryWithDB()) {
     print('Data Stored!');
   }
+}
+
+void printBookByID(int bookID) {
+  Map<String, dynamic> book = library.firstWhere((item) => item['id'] == bookID);
+  print('Book found Succesfuly:');
+  print(getBookPrintable(book));
+  print('------------------------------------');
 }
 
 int? getBookId() {
@@ -226,6 +231,43 @@ int? getBookId() {
   return isEntered ? id : null;
 }
 
-void searchBooks() {}
+void searchBooksRequest() {
+  print('Enter the Select: (Enter 0 for back)\n1: Search in Titles.\n2: Search in Authors.\n3: Search in Each of them.');
+  String input = stdin.readLineSync()!;
+  while (input != '0') {
+    if (input != '1' && input != '2' && input != '3') {
+      print('Input not currrect!!\nPlease try again...');
+      input = stdin.readLineSync()!;
+    }
+    print('Enter for search:');
+    String data = stdin.readLineSync()!;
+    if (data != '0') {
+      var results = search(
+          data,
+          input == '1'
+              ? SearchMode.title
+              : input == '2'
+                  ? SearchMode.author
+                  : SearchMode.both);
+      print('${results.length} items found:\n');
+      print(results.map((item) => getBookPrintable(item)).join('\n----------------------\n'));
+    }
+    break;
+  }
+}
+
+enum SearchMode { title, author, both }
+
+List<Map<String, dynamic>> search(String source, SearchMode mode) {
+  List<Map<String, dynamic>> resualt = [];
+  if (mode == SearchMode.title) {
+    resualt.addAll(library.where((item) => (!item.containsKey('is_deleted') && item['title'].toString().contains(source))));
+  } else if (mode == SearchMode.author) {
+    resualt.addAll(library.where((item) => (!item.containsKey('is_deleted') && item['author'].toString().contains(source))));
+  } else {
+    resualt.addAll(library.where((item) => (!item.containsKey('is_deleted') && (item['author'].toString().contains(source) || item['title'].toString().contains(source)))));
+  }
+  return resualt;
+}
 
 String getBookPrintable(Map<String, dynamic> book) => "id: ${book['id']}\ttitle: ${book['title']}\tauthor: ${book['author']}";
