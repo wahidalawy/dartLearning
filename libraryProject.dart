@@ -68,7 +68,7 @@ void handleUserRequest(String input) {
 
 void showAllBooks() {
   print(
-    library.map((item) => getBookPrintable(item)).toList().join('\n----------------------\n'),
+    library.where((item) => !item.containsKey('is_deleted')).map((item) => getBookPrintable(item)).toList().join('\n----------------------\n'),
   );
 }
 
@@ -181,17 +181,18 @@ void deleteBookRequest() {
   if (id != null) {
     print('Do you realy want to delete the Book?(y: yes, n: no)');
     String input = stdin.readLineSync()!;
-    if(input == 'y'){
+    if (input == 'y') {
       deleteBook(id);
       print('Book Deleted Succesfuly');
     }
   }
 }
 
-void deleteBook(int bookID){
+void deleteBook(int bookID) {
   int bookIndex = library.indexWhere((item) => item['id'] == bookID);
-  library.removeAt(bookIndex);
-  if(syncLibraryWithDB()){
+  // library.removeAt(bookIndex);
+  library[bookIndex]['is_deleted'] = true;
+  if (syncLibraryWithDB()) {
     print('Data Stored!');
   }
 }
@@ -214,7 +215,7 @@ int? getBookId() {
       continue;
     }
     //if this inputed id not found!!
-    if (!library.any((item) => item['id'] == id)) {
+    if (!library.any((item) => item['id'] == id && !item.containsKey('is_deleted'))) {
       print('Inputed ID not found!\nPlease try again:');
       input = stdin.readLineSync()!;
       continue;
