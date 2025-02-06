@@ -21,8 +21,15 @@ void main(List<String> args) {
 }
 
 void initLibrary() {
-  List<dynamic> books = jsonDecode(File('books.json').readAsStringSync());
-  library.addAll(books.cast());
+  if (File('books.json').existsSync()) {
+    String booksContent = File('books.json').readAsStringSync();
+    if (booksContent.isNotEmpty) {
+      List<dynamic> books = jsonDecode(booksContent);
+      library.addAll(books.cast());
+    }
+  } else {
+    File('books.json').createSync();
+  }
 }
 
 void printMenu() {
@@ -59,10 +66,7 @@ void handleUserRequest(String input) {
 
 void showAllBooks() {
   print(
-    library
-        .map((item) => getBookPritable(item))
-        .toList()
-        .join('\n----------------------\n'),
+    library.map((item) => getBookPritable(item)).toList().join('\n----------------------\n'),
   );
 }
 
@@ -93,7 +97,7 @@ void addBookRequest() {
 }
 
 Map<String, dynamic> addBook(String title, String author) {
-  int id = library.last['id'] + 1;
+  int id = library.isNotEmpty ? library.last['id'] + 1 : 1;
   Map<String, dynamic> addedBook = {'id': id, 'title': title, 'author': author};
   library.add(addedBook);
   if (syncLibraryWithDB()) {
@@ -117,7 +121,6 @@ void deleteBook() {}
 void searchBooks() {}
 
 String getBookPritable(Map<String, dynamic> book) {
-  String output =
-      "id: ${book['id']}\ttitle: ${book['title']}\tauthor: ${book['author']}";
+  String output = "id: ${book['id']}\ttitle: ${book['title']}\tauthor: ${book['author']}";
   return output;
 }
