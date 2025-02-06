@@ -56,7 +56,7 @@ void handleUserRequest(String input) {
       editBookRequest();
       break;
     case '4':
-      deleteBook();
+      deleteBookRequest();
       break;
     case '5':
       searchBooks();
@@ -119,32 +119,14 @@ bool syncLibraryWithDB() {
 }
 
 void editBookRequest() {
-  print('Enter BookID wants to Edit: (Enter 0 for back)');
-  String input = stdin.readLineSync()!;
-  while (input != '0') {
-    if (input.isEmpty) {
-      print('Nothig Entered!!\nPlease try again:');
-      input = stdin.readLineSync()!;
-      continue;
-    }
-    int? id = int.tryParse(input);
-    if (id == null) {
-      print('Input is not in currect format!!\nPlease try again:');
-      input = stdin.readLineSync()!;
-      continue;
-    }
-    //if this inputed id not found!!
-    if (!library.any((item) => item['id'] == id)) {
-      print('Inputed ID not found!\nPlease try again:');
-      input = stdin.readLineSync()!;
-      continue;
-    }
+  int? id = getBookId();
+  if (id != null) {
     Map<String, dynamic> book = library.firstWhere((item) => item['id'] == id);
     print('Book found Succesfuly:');
     print(getBookPrintable(book));
     print('------------------------------------');
     print('Enter the Select:\n1: Edit Book Title\n2: Edit Book Author');
-    input = stdin.readLineSync()!;
+    String input = stdin.readLineSync()!;
     while (input != '0') {
       switch (input) {
         case '1':
@@ -168,7 +150,6 @@ void editBookRequest() {
       }
       break;
     }
-    break;
   }
 }
 
@@ -195,7 +176,55 @@ Map<String, dynamic>? editBook(int bookID, EditMode mode) {
   return isEdited ? library[bookIndex] : null;
 }
 
-void deleteBook() {}
+void deleteBookRequest() {
+  int? id = getBookId();
+  if (id != null) {
+    print('Do you realy want to delete the Book?(y: yes, n: no)');
+    String input = stdin.readLineSync()!;
+    if(input == 'y'){
+      deleteBook(id);
+      print('Book Deleted Succesfuly');
+    }
+  }
+}
+
+void deleteBook(int bookID){
+  int bookIndex = library.indexWhere((item) => item['id'] == bookID);
+  library.removeAt(bookIndex);
+  if(syncLibraryWithDB()){
+    print('Data Stored!');
+  }
+}
+
+int? getBookId() {
+  bool isEntered = false;
+  int? id = null;
+  print('Enter BookID wants to Edit: (Enter 0 for back)');
+  String input = stdin.readLineSync()!;
+  while (input != '0') {
+    if (input.isEmpty) {
+      print('Nothig Entered!!\nPlease try again:');
+      input = stdin.readLineSync()!;
+      continue;
+    }
+    id = int.tryParse(input);
+    if (id == null) {
+      print('Input is not in currect format!!\nPlease try again:');
+      input = stdin.readLineSync()!;
+      continue;
+    }
+    //if this inputed id not found!!
+    if (!library.any((item) => item['id'] == id)) {
+      print('Inputed ID not found!\nPlease try again:');
+      input = stdin.readLineSync()!;
+      continue;
+    }
+    isEntered = true;
+    break;
+  }
+  return isEntered ? id : null;
+}
+
 void searchBooks() {}
 
 String getBookPrintable(Map<String, dynamic> book) => "id: ${book['id']}\ttitle: ${book['title']}\tauthor: ${book['author']}";
