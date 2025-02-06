@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
-List<Map<String, dynamic>> library = [];
+typedef Book = Map<String, dynamic>;
+
+List<Book> library = [];
 
 String bookDBAddress = 'books.json';
 
@@ -98,9 +100,9 @@ void addBookRequest() {
   }
 }
 
-Map<String, dynamic> addBook(String title, String author) {
+Book addBook(String title, String author) {
   int id = library.isNotEmpty ? library.last['id'] + 1 : 1;
-  Map<String, dynamic> addedBook = {'id': id, 'title': title, 'author': author};
+  Book addedBook = {'id': id, 'title': title, 'author': author};
   library.add(addedBook);
   if (syncLibraryWithDB()) {
     print('Data Stored!');
@@ -152,7 +154,7 @@ void editBookRequest() {
 
 enum EditMode { title, author }
 
-Map<String, dynamic>? editBook(int bookID, EditMode mode) {
+Book? editBook(int bookID, EditMode mode) {
   int bookIndex = library.indexWhere((item) => item['id'] == bookID);
   bool isEdited = false;
   print('Enter new ${mode.name}:');
@@ -196,7 +198,7 @@ void deleteBook(int bookID) {
 }
 
 void printBookByID(int bookID) {
-  Map<String, dynamic> book = library.firstWhere((item) => item['id'] == bookID);
+  Book book = library.firstWhere((item) => item['id'] == bookID);
   print('Book found Succesfuly:');
   print(getBookPrintable(book));
   print('------------------------------------');
@@ -258,8 +260,8 @@ void searchBooksRequest() {
 
 enum SearchMode { title, author, both }
 
-List<Map<String, dynamic>> search(String source, SearchMode mode) {
-  List<Map<String, dynamic>> resualt = [];
+List<Book> search(String source, SearchMode mode) {
+  List<Book> resualt = [];
   if (mode == SearchMode.title) {
     resualt.addAll(library.where((item) => (!item.containsKey('is_deleted') && item['title'].toString().contains(source))));
   } else if (mode == SearchMode.author) {
@@ -270,4 +272,4 @@ List<Map<String, dynamic>> search(String source, SearchMode mode) {
   return resualt;
 }
 
-String getBookPrintable(Map<String, dynamic> book) => "id: ${book['id']}\ttitle: ${book['title']}\tauthor: ${book['author']}";
+String getBookPrintable(Book book) => "id: ${book['id']}\ttitle: ${book['title']}\tauthor: ${book['author']}";
