@@ -7,11 +7,11 @@ void main(List<String> args) {
   q.removeFirst();
   q.removeLast();
   print(q);
-  
+
   //first in first out => fi fo
   q.addFirst('value');
   q.removeFirst();
-  //last in last out => la lo
+  //last in last out => li lo
   q.addLast('value');
   q.removeLast();
   //first in last out => fi lo
